@@ -8,7 +8,7 @@ import time
 
 # --- CONFIGURACIÓN DEL TESTING ---
 # Cambia este valor para probar distintos builds ("Prototype", "7", "1", etc.)
-BUILD_A_PROBAR = "Prototype" 
+BUILD_A_PROBAR = "7"  
 
 class TestCalculadoraIS3(unittest.TestCase):
 
@@ -54,7 +54,7 @@ class TestCalculadoraIS3(unittest.TestCase):
         btn_calc.click()
         
         # 5. Pausa táctica de 1.5 segundos para dejar que el JavaScript procese
-        time.sleep(1.5)
+       # time.sleep(1.5)
         
         # 6. Leemos el campo de errores primero
         resultado_err = driver.find_element(By.ID, "errorMsgField").text
@@ -115,10 +115,11 @@ if __name__ == "__main__":
     for test in suite:
         descripcion = test._testMethodDoc or test._testMethodName
         instancia_test = TestCalculadoraIS3(test._testMethodName)
+        
         try:
             instancia_test.setUp()
+            # Ejecutamos el caso de prueba propiamente dicho
             getattr(instancia_test, test._testMethodName)()
-            instancia_test.tearDown()
             print(f"{descripcion} ... ok")
         except AssertionError:
             print(f"{descripcion} ... FAIL")
@@ -126,10 +127,15 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"{descripcion} ... ERROR")
             hubo_fallos = True
+        finally:
+            try:
+                instancia_test.tearDown()
+            except Exception:
+                pass
 
     print("-" * 50)
     if not hubo_fallos:
         print("OK")
     else:
-        print("FAILED (Hay errores en la suite de pruebas)")
+        print("FAILED (Hay errores en las pruebas)")
     print("\n")
