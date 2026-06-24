@@ -8,7 +8,7 @@ import time
 
 # --- CONFIGURACIÓN DEL TESTING ---
 # Cambia este valor para probar distintos builds ("Prototype", "7", "1", etc.)
-BUILD_A_PROBAR = "7" 
+BUILD_A_PROBAR = "Prototype" 
 
 class TestCalculadoraIS3(unittest.TestCase):
 
@@ -74,26 +74,32 @@ class TestCalculadoraIS3(unittest.TestCase):
     # --- Ejecución de los Casos de Prueba ---
 
     def test_cp1_letras_first_number(self):
+        """CP1: Validar ingreso de letras en First Number"""
         resultado = self.ejecutar_operacion("h", "17", "Add")
         self.assertEqual(resultado, "Number 1 is not a number", "CP1 Fallido")
 
     def test_cp2_letras_second_number(self):
+        """CP2: Validar ingreso de letras en Second Number"""
         resultado = self.ejecutar_operacion("120", "a", "Add")
         self.assertEqual(resultado, "Number 2 is not a number", "CP2 Fallido")
 
     def test_cp4_division_por_cero(self):
+        """CP4: Validar control de división por cero"""
         resultado = self.ejecutar_operacion("10", "0", "Divide")
         self.assertEqual(resultado, "Divide by zero error!", "CP4 Fallido")
 
     def test_cp5_coma_first_number(self):
+        """CP5: Validar rechazo de comas en decimales (First Number)"""
         resultado = self.ejecutar_operacion("10,5", "10", "Add")
         self.assertEqual(resultado, "Number 1 is not a number", "CP5 Fallido")
 
     def test_cp7_vacio_first_number(self):
+        """CP7: Validar comportamiento con First Number vacío"""
         resultado = self.ejecutar_operacion("", "10.6", "Subtract")
         self.assertEqual(resultado, "-10.6", "CP7 Fallido")
 
     def test_cp8_vacio_second_number(self):
+        """CP8: Validar comportamiento con Second Number vacío"""
         resultado = self.ejecutar_operacion("10", "", "Multiply")
         self.assertEqual(resultado, "0", "CP8 Fallido")
 
@@ -101,4 +107,29 @@ class TestCalculadoraIS3(unittest.TestCase):
         self.driver.quit()
 
 if __name__ == "__main__":
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculadoraIS3)
+    print("\n--- EJECUCIÓN DE PRUEBAS AUTOMATIZADAS ---")
+    
+    hubo_fallos = False
+    
+    for test in suite:
+        descripcion = test._testMethodDoc or test._testMethodName
+        instancia_test = TestCalculadoraIS3(test._testMethodName)
+        try:
+            instancia_test.setUp()
+            getattr(instancia_test, test._testMethodName)()
+            instancia_test.tearDown()
+            print(f"{descripcion} ... ok")
+        except AssertionError:
+            print(f"{descripcion} ... FAIL")
+            hubo_fallos = True
+        except Exception as e:
+            print(f"{descripcion} ... ERROR")
+            hubo_fallos = True
+
+    print("-" * 50)
+    if not hubo_fallos:
+        print("OK")
+    else:
+        print("FAILED (Hay errores en la suite de pruebas)")
+    print("\n")
