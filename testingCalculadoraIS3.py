@@ -8,7 +8,7 @@ import time
 
 # --- CONFIGURACIÓN DEL TESTING ---
 # Cambia este valor para probar distintos builds ("Prototype", "7", "1", etc.)
-BUILD_A_PROBAR = "7"  
+BUILD_A_PROBAR = "Prototype"  # Cambia a "7" o "1" según el build que quieras probar
 
 class TestCalculadoraIS3(unittest.TestCase):
 
@@ -106,27 +106,37 @@ class TestCalculadoraIS3(unittest.TestCase):
     def tearDown(self):
         self.driver.quit()
 
+# --- EJECUCIÓN DE PRUEBAS AUTOMATIZADAS Y RESUMEN FINAL ---
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculadoraIS3)
     print("\n--- EJECUCIÓN DE PRUEBAS AUTOMATIZADAS ---")
+    print(f"Build a probar: {BUILD_A_PROBAR}")
+    print("-" * 50)
     
     hubo_fallos = False
+    lista_fallas = []
+    cantidad_tests_ejecutados = 0
     
     for test in suite:
         descripcion = test._testMethodDoc or test._testMethodName
+        id_caso = descripcion.split(":")[0] if ":" in descripcion else test._testMethodName
         instancia_test = TestCalculadoraIS3(test._testMethodName)
-        
+        cantidad_tests_ejecutados += 1
         try:
             instancia_test.setUp()
-            # Ejecutamos el caso de prueba propiamente dicho
             getattr(instancia_test, test._testMethodName)()
             print(f"{descripcion} ... ok")
-        except AssertionError:
+        except AssertionError as e:
             print(f"{descripcion} ... FAIL")
+            # Imprimimos el detalle del AssertionError con una pequeña sangría
+            print(f"    AssertionError: {e}\n")
             hubo_fallos = True
+            lista_fallas.append(id_caso)
         except Exception as e:
             print(f"{descripcion} ... ERROR")
+            print(f"    Error del sistema: {e}\n")
             hubo_fallos = True
+            lista_fallas.append(id_caso)
         finally:
             try:
                 instancia_test.tearDown()
@@ -137,5 +147,8 @@ if __name__ == "__main__":
     if not hubo_fallos:
         print("OK")
     else:
-        print("FAILED (Hay errores en las pruebas)")
+        casos_rotos = ", ".join(lista_fallas)
+        print(f"FAILED (Hay errores en las pruebas)")
+        print(f"Casos de prueba que fallaron: {casos_rotos}")
+    print(f"Total de pruebas ejecutadas: {cantidad_tests_ejecutados}")
     print("\n")
