@@ -8,7 +8,7 @@ import time
 
 # --- CONFIGURACIÓN DEL TESTING ---
 # Cambia este valor para probar distintos builds ("Prototype", "7", "1", etc.)
-BUILD_A_PROBAR = "Prototype"  # Cambia a "7" o "1" según el build que quieras probar
+BUILD_A_PROBAR = "9"  # Cambia a "7" o "1" según el build que quieras probar
 
 class TestCalculadoraIS3(unittest.TestCase):
 
@@ -83,6 +83,28 @@ class TestCalculadoraIS3(unittest.TestCase):
         resultado = self.ejecutar_operacion("120", "a", "Add")
         self.assertEqual(resultado, "Number 2 is not a number", "CP2 Fallido")
 
+    def test_cp3_nuevas_operaciones(self):
+            """CP3: Probar ingresar nuevas operaciones"""
+            # Completamos campos iniciales requeridos según matriz de diseño (10 y 5)
+            wait = WebDriverWait(self.driver, 5)
+            input_first = wait.until(EC.presence_of_element_located((By.ID, "number1Field")))
+            input_first.clear()
+            input_first.send_keys("10")
+            
+            input_second = self.driver.find_element(By.ID, "number2Field")
+            input_second.clear()
+            input_second.send_keys("5")
+
+            # Capturamos las opciones actuales en la interfaz
+            select_op = Select(self.driver.find_element(By.ID, "selectOperationDropdown"))
+            opciones_reales = [op.text for op in select_op.options]
+            
+            # Definimos las que son válidas por requerimiento
+            operaciones_validas = {"Add", "Subtract", "Multiply", "Divide", "Concatenate"}
+            operaciones_extra = set(opciones_reales) - operaciones_validas
+            
+            # Si existen elementos no permitidos, falla informando cuáles son
+            self.assertEqual(len(operaciones_extra), 0, f"Se encontraron operaciones inválidas: {operaciones_extra}")
     def test_cp4_division_por_cero(self):
         """CP4: Validar control de división por cero"""
         resultado = self.ejecutar_operacion("10", "0", "Divide")
@@ -92,16 +114,21 @@ class TestCalculadoraIS3(unittest.TestCase):
         """CP5: Validar rechazo de comas en decimales (First Number)"""
         resultado = self.ejecutar_operacion("10,5", "10", "Add")
         self.assertEqual(resultado, "Number 1 is not a number", "CP5 Fallido")
+        
+    def test_cp6_coma_second_number(self):
+        """CP6: Validar rechazo de comas en decimales (Second Number)"""
+        resultado = self.ejecutar_operacion("10", "10,5", "Subtract")
+        self.assertEqual(resultado, "Number 2 is not a number", "CP6 Fallido")
 
     def test_cp7_vacio_first_number(self):
         """CP7: Validar comportamiento con First Number vacío"""
         resultado = self.ejecutar_operacion("", "10.6", "Subtract")
-        self.assertEqual(resultado, "-10.6", "CP7 Fallido")
+        self.assertEqual(resultado, "Number 1 is not a number", "CP7 Fallido")
 
     def test_cp8_vacio_second_number(self):
         """CP8: Validar comportamiento con Second Number vacío"""
         resultado = self.ejecutar_operacion("10", "", "Multiply")
-        self.assertEqual(resultado, "0", "CP8 Fallido")
+        self.assertEqual(resultado, "Number 2 is not a number", "CP8 Fallido")
 
     def tearDown(self):
         self.driver.quit()
@@ -134,7 +161,8 @@ if __name__ == "__main__":
             lista_fallas.append(id_caso)
         except Exception as e:
             print(f"{descripcion} ... ERROR")
-            print(f"    Error del sistema: {e}\n")
+            mensaje_limpio = str(e).split("\n")[0]
+            print(f"    Error del sistema: {mensaje_limpio}\n")
             hubo_fallos = True
             lista_fallas.append(id_caso)
         finally:
